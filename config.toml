@@ -62,3 +62,8 @@ disqusShortname = "yourdiscussshortname"
     name = "Projects"
     weight = 3
     url = "/projects/"
+
+[deployment]
+[[deployment.targets]]
+    name = "s3-deployment"
+    URL = "s3://www.philipcstevens.com?region=us-west-2"

@@ -1,7 +1,7 @@
 ---
 title: "About"
 date: 2019-09-27T11:11:15+07:00
-draft: true
+draft: false
 ---
 
 Hi, I'm Philip Stevens. Welcome to my website.  

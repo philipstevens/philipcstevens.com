@@ -1,7 +1,7 @@
 ---
 title: "Contact"
 date: 2019-09-27T11:11:51+07:00
-draft: true
+draft: false
 ---
 
 <form method="POST" action="https://getform.io/f/8fb39c82-2f8f-41bf-921e-78db26c49791">
