@@ -6,6 +6,5 @@ draft: false
 
 Hi, I'm Philip Stevens. Welcome to my website.  
 
-This is where I share projects I've been working on and things I've learned related to the 
-fields of data science, machine learning and artifial intelligence.
-
+This is where I share projects I've been working on and things I've learned related to the
+fields of data science, machine learning and artificial intelligence.
