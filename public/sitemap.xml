@@ -1,15 +1,20 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
+    <loc>http://www.philipcstevens.com/posts/basic-transfer-learning/</loc>
+    <lastmod>2019-12-10T10:47:44+07:00</lastmod>
+  </url>
+  
+  <url>
     <loc>http://www.philipcstevens.com/</loc>
-    <lastmod>2019-09-27T12:19:25+07:00</lastmod>
+    <lastmod>2019-12-10T10:47:44+07:00</lastmod>
   </url>
   
   <url>
     <loc>http://www.philipcstevens.com/posts/</loc>
-    <lastmod>2019-09-27T12:19:25+07:00</lastmod>
+    <lastmod>2019-12-10T10:47:44+07:00</lastmod>
   </url>
   
   <url>

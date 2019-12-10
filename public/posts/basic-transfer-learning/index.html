@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="author" content="Philip C. Stevens">
+    <meta name="description" content="Phil Stevens&#39; personal website">
+    <meta name="keywords" content="blog,developer,personal,data scientist,machine learning">
+
+    <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Basic Transfer Learning"/>
+<meta name="twitter:description" content="Basic Transfer Learning Here I will demonstrate how to do basic transfer learning with tensorflow and keras. The bottom layer of our neural network will use a feature vector extracted from a much more complex convolutional neural network.
+1) Imports: We use tensorflow (tf) with keras to build and train our models.
+We use tensorflow_hub (hub) which connects to a library of reusable machine learning model components called modules which can be viewed here: https://tfhub."/>
+
+    <meta property="og:title" content="Basic Transfer Learning" />
+<meta property="og:description" content="Basic Transfer Learning Here I will demonstrate how to do basic transfer learning with tensorflow and keras. The bottom layer of our neural network will use a feature vector extracted from a much more complex convolutional neural network.
+1) Imports: We use tensorflow (tf) with keras to build and train our models.
+We use tensorflow_hub (hub) which connects to a library of reusable machine learning model components called modules which can be viewed here: https://tfhub." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.philipcstevens.com/posts/basic-transfer-learning/" />
+<meta property="article:published_time" content="2019-12-10T10:47:44+07:00" />
+<meta property="article:modified_time" content="2019-12-10T10:47:44+07:00" />
+
+
+    
+      <base href="http://www.philipcstevens.com/posts/basic-transfer-learning/">
+    
+    <title>
+  Basic Transfer Learning · Philip C. Stevens
+</title>
+
+    
+      <link rel="canonical" href="http://www.philipcstevens.com/posts/basic-transfer-learning/">
+    
+
+    <link href="https://fonts.googleapis.com/css?family=Lato:400,700%7CMerriweather:300,700%7CSource+Code+Pro:400,700" rel="stylesheet">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.11.2/css/all.css" integrity="sha384-KA6wR/X5RY4zFAHpv/CnoG2UW1uogYfdnP67Uv7eULvTveboZJg0qUpmJZb5VqzN" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css" integrity="sha256-l85OmPOjvil/SOvVt3HnSSjzF1TUMyT9eV0c2BzEGzU=" crossorigin="anonymous" />
+
+    
+      
+      
+      <link rel="stylesheet" href="http://www.philipcstevens.com/css/coder.min.28d751104f30c16da1aa1bb04015cbe662cacfe0d1b01af4f2240ad58580069c.css" integrity="sha256-KNdREE8wwW2hqhuwQBXL5mLKz&#43;DRsBr08iQK1YWABpw=" crossorigin="anonymous" media="screen" />
+    
+
+    
+
+    
+
+    
+      <link rel="stylesheet" href="http://www.philipcstevens.com/css/custom.css" />
+    
+
+    
+    
+    <link rel="icon" type="image/png" href="http://www.philipcstevens.com/img/favicon-32x32.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="http://www.philipcstevens.com/img/favicon-16x16.png" sizes="16x16">
+
+    <meta name="generator" content="Hugo 0.60.1" />
+  </head>
+
+  
+  
+  <body class="colorscheme-light">
+    <main class="wrapper">
+      <nav class="navigation">
+  <section class="container">
+    <a class="navigation-title" href="http://www.philipcstevens.com/">
+      Philip C. Stevens
+    </a>
+    <input type="checkbox" id="menu-toggle" />
+    <label class="menu-button float-right" for="menu-toggle"><i class="fas fa-bars"></i></label>
+    <ul class="navigation-list">
+      
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="http://www.philipcstevens.com/about/">About</a>
+          </li>
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="http://www.philipcstevens.com/posts/">Blog</a>
+          </li>
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="http://www.philipcstevens.com/projects/">Projects</a>
+          </li>
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="http://www.philipcstevens.com/contact/">Contact</a>
+          </li>
+        
+      
+      
+    </ul>
+  </section>
+</nav>
+
+
+      <div class="content">
+        
+  <section class="container post">
+    <article>
+      <header>
+        <div class="post-title">
+          <h1 class="title">Basic Transfer Learning</h1>
+        </div>
+        <div class="post-meta">
+          <div class="date">
+            <span class="posted-on">
+              <i class="fas fa-calendar"></i>
+              <time datetime='2019-12-10T10:47:44&#43;07:00'>
+                December 10, 2019
+              </time>
+            </span>
+            <span class="reading-time">
+              <i class="fas fa-clock"></i>
+              11 minutes read
+            </span>
+          </div>
+          
+          
+        </div>
+      </header>
+
+      <div>
+        <h1 id="basic-transfer-learning">Basic Transfer Learning</h1>
+<p>Here I will demonstrate how to do basic transfer learning with tensorflow and keras. The bottom layer of our neural network will use a feature vector extracted from a much more complex convolutional neural network.</p>
+<h2 id="1-imports">1) Imports:</h2>
+<p>We use tensorflow (tf) with keras to build and train our models.</p>
+<p>We use tensorflow_hub (hub) which connects to a library of reusable machine learning model components called modules which can be viewed here: <a href="https://tfhub.dev/">https://tfhub.dev/</a>. From here we will extract a pretrained feature layer which will transfer to our model.</p>
+<p>Similarly, we use tensorflow_datasets (tfds) which connects to a collection of datasets ready to use with tensorflow: <a href="https://www.tensorflow.org/datasets/catalog/overview">https://www.tensorflow.org/datasets/catalog/overview</a>.</p>
+<p>We will use matplotlib.pyplot (plt) to plot our learning curves.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#ff79c6">import</span> tensorflow <span style="color:#ff79c6">as</span> tf
+<span style="color:#ff79c6">import</span> tensorflow.keras <span style="color:#ff79c6">as</span> keras
+<span style="color:#ff79c6">import</span> tensorflow_hub <span style="color:#ff79c6">as</span> hub
+<span style="color:#ff79c6">import</span> tensorflow_datasets <span style="color:#ff79c6">as</span> tfds
+<span style="color:#ff79c6">import</span> matplotlib.pyplot <span style="color:#ff79c6">as</span> plt
+</code></pre></div><h2 id="2-setup-and-validate-the-gpus">2) Setup and validate the GPUs:</h2>
+<p>Here we prepare the GPUs for use and confirm they are avaialable to tensorflow. Note memory growth must be set before GPUs have been initialized and that memory growth needs to be the same across GPUs.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">gpus <span style="color:#ff79c6">=</span> tf<span style="color:#ff79c6">.</span>config<span style="color:#ff79c6">.</span>experimental<span style="color:#ff79c6">.</span>list_physical_devices(<span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#39;</span><span style="color:#f1fa8c">GPU</span><span style="color:#f1fa8c">&#39;</span>)
+
+<span style="color:#ff79c6">if</span> gpus:
+    <span style="color:#ff79c6">try</span>:
+        <span style="color:#ff79c6">for</span> gpu <span style="color:#ff79c6">in</span> gpus:
+            tf<span style="color:#ff79c6">.</span>config<span style="color:#ff79c6">.</span>experimental<span style="color:#ff79c6">.</span>set_memory_growth(gpu, True)
+        logical_gpus <span style="color:#ff79c6">=</span> tf<span style="color:#ff79c6">.</span>config<span style="color:#ff79c6">.</span>experimental<span style="color:#ff79c6">.</span>list_logical_devices(<span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#39;</span><span style="color:#f1fa8c">GPU</span><span style="color:#f1fa8c">&#39;</span>)
+        <span style="color:#ff79c6">print</span>(<span style="color:#8be9fd;font-style:italic">len</span>(gpus), <span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#34;</span><span style="color:#f1fa8c">Physical GPUs,</span><span style="color:#f1fa8c">&#34;</span>, <span style="color:#8be9fd;font-style:italic">len</span>(logical_gpus), <span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#34;</span><span style="color:#f1fa8c">Logical GPUs</span><span style="color:#f1fa8c">&#34;</span>)
+    <span style="color:#ff79c6">except</span> RuntimeError <span style="color:#ff79c6">as</span> e:
+        <span style="color:#ff79c6">print</span>(e)
+
+</code></pre></div><pre><code>1 Physical GPUs, 1 Logical GPUs
+</code></pre>
+<h2 id="3-load-dataset">3) Load dataset:</h2>
+<p>Here we load in The Oxford-IIIT Pet Dataset found here: <a href="https://www.tensorflow.org/datasets/catalog/oxford_iiit_pet">https://www.tensorflow.org/datasets/catalog/oxford_iiit_pet</a>.</p>
+<p>The Oxford-IIIT Pet Dataset is an image dataset of 37 breeds of cats and dogs with around 200 images for each breed. The images vary in scale, pose and lighting. The dataset also consists of the corresponding label for each image and a pixel-wise mask for image segmentation.</p>
+<p>tfds.load is a convenience method that's the simplest way to build and load a tf.data.Dataset when it is registered in the Tensorflow datasets collection. When with_info=True a tuple is returned that contains both the dataset and a tfds.core.DatasetInfo object which contains useful metadata on the dataset.</p>
+<p>Each dataset comes in it's own format which you may have to explore. In this case our dataset is actually two tf.data.Dataset's specified in a dicitonary as the train and test splits. Each split contains the images, labels, file names and segmentation masks.</p>
+<p>Note when we load we could set as_supervised to true and the dataset will have a 2-tuple structure of (image, label) and remove all the other data we aren't using. However in this case the info object does not include a feature dictionary from label to human-readable string so we must infer it ourselves from the dataset directly where a file_name is associated with each label.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">dataset, info <span style="color:#ff79c6">=</span> tfds<span style="color:#ff79c6">.</span>load(<span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#39;</span><span style="color:#f1fa8c">oxford_iiit_pet</span><span style="color:#f1fa8c">&#39;</span>, with_info<span style="color:#ff79c6">=</span>True)
+
+raw_train <span style="color:#ff79c6">=</span> dataset[<span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#39;</span><span style="color:#f1fa8c">train</span><span style="color:#f1fa8c">&#39;</span>]
+raw_test <span style="color:#ff79c6">=</span> dataset[<span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#39;</span><span style="color:#f1fa8c">test</span><span style="color:#f1fa8c">&#39;</span>]
+</code></pre></div><h2 id="4-prepare-input-pipeline">4) Prepare input pipeline:</h2>
+<p>Here we prepare our input pipeline for training. Most importantly we format our dataset as a 2-tuple structure of (image, label), resize the images so they all have the same dimensions, and then batch the (image, label) tuples into groups of 34. This is applied to both the train and the test splits.</p>
+<p>For the training data we also augment our dataset by randomly flipping images left and right. This effectively increases the size of our training set. We also shuffle and repeat the input pipeline where the batches and the augmentations are randomly re-applied each iteration.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">IMG_SIZE <span style="color:#ff79c6">=</span> (<span style="color:#bd93f9">224</span>, <span style="color:#bd93f9">224</span>)
+BATCH_SIZE <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">32</span>
+SHUFFLE_BUFFER_SIZE <span style="color:#ff79c6">=</span> info<span style="color:#ff79c6">.</span>splits[<span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#39;</span><span style="color:#f1fa8c">train</span><span style="color:#f1fa8c">&#39;</span>]<span style="color:#ff79c6">.</span>num_examples
+
+train <span style="color:#ff79c6">=</span> raw_train<span style="color:#ff79c6">.</span>map(
+    <span style="color:#ff79c6">lambda</span> datapoint: (datapoint[<span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#39;</span><span style="color:#f1fa8c">image</span><span style="color:#f1fa8c">&#39;</span>], datapoint[<span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#39;</span><span style="color:#f1fa8c">label</span><span style="color:#f1fa8c">&#39;</span>])
+)<span style="color:#ff79c6">.</span>map(
+    <span style="color:#ff79c6">lambda</span> image, label: (tf<span style="color:#ff79c6">.</span>image<span style="color:#ff79c6">.</span>convert_image_dtype(image, tf<span style="color:#ff79c6">.</span>float32), label)
+)<span style="color:#ff79c6">.</span>map(
+    <span style="color:#ff79c6">lambda</span> image, label: (tf<span style="color:#ff79c6">.</span>image<span style="color:#ff79c6">.</span>resize(image, IMG_SIZE), label)
+)<span style="color:#ff79c6">.</span>map(
+    <span style="color:#ff79c6">lambda</span> image, label: (tf<span style="color:#ff79c6">.</span>image<span style="color:#ff79c6">.</span>random_flip_left_right(image), label)
+)<span style="color:#ff79c6">.</span>cache()<span style="color:#ff79c6">.</span>shuffle(
+    SHUFFLE_BUFFER_SIZE
+)<span style="color:#ff79c6">.</span>batch(
+    BATCH_SIZE
+)<span style="color:#ff79c6">.</span>repeat()
+
+test <span style="color:#ff79c6">=</span> raw_test<span style="color:#ff79c6">.</span>map(
+    <span style="color:#ff79c6">lambda</span> datapoint: (datapoint[<span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#39;</span><span style="color:#f1fa8c">image</span><span style="color:#f1fa8c">&#39;</span>], datapoint[<span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#39;</span><span style="color:#f1fa8c">label</span><span style="color:#f1fa8c">&#39;</span>])
+)<span style="color:#ff79c6">.</span>map(
+    <span style="color:#ff79c6">lambda</span> image, label: (tf<span style="color:#ff79c6">.</span>image<span style="color:#ff79c6">.</span>convert_image_dtype(image, tf<span style="color:#ff79c6">.</span>float32), label)
+)<span style="color:#ff79c6">.</span>map(
+    <span style="color:#ff79c6">lambda</span> image, label: (tf<span style="color:#ff79c6">.</span>image<span style="color:#ff79c6">.</span>resize(image, IMG_SIZE), label)
+)<span style="color:#ff79c6">.</span>batch(
+    BATCH_SIZE
+)
+</code></pre></div><h2 id="5-view-and-validate-images-in-pipeline">5) View and validate images in pipeline:</h2>
+<p>It's good to sanity check our input pipeline to make sure the images and labels are what we expect.</p>
+<p>First we want to create a dictionary to map from labels to human-readable strings. We can infer this from the file names contained in the original raw dataset. Next we want to display a number of images along with their breed.</p>
+<p>I'm not personally an expert on dog and cat breeds but notice a breed starting with a capital letter indicates the species is a cat and lowercase indicates the species is a dog. Combine that knowledge with the few cat and dog breeds I am familiar with and all seems well.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#ff79c6">def</span> <span style="color:#50fa7b">generate_name_id_pairs</span>(datapoint):
+    name <span style="color:#ff79c6">=</span> datapoint[<span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#39;</span><span style="color:#f1fa8c">file_name</span><span style="color:#f1fa8c">&#39;</span>]
+    label <span style="color:#ff79c6">=</span> datapoint[<span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#39;</span><span style="color:#f1fa8c">label</span><span style="color:#f1fa8c">&#39;</span>]
+    <span style="color:#ff79c6">return</span> name, label
+
+name_id_pairs <span style="color:#ff79c6">=</span> raw_train<span style="color:#ff79c6">.</span>map(generate_name_id_pairs)
+
+feat_dict <span style="color:#ff79c6">=</span> {}
+<span style="color:#ff79c6">for</span> name, label <span style="color:#ff79c6">in</span> name_id_pairs:
+    feat_dict[label<span style="color:#ff79c6">.</span>numpy()] <span style="color:#ff79c6">=</span> <span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#39;</span><span style="color:#f1fa8c"> </span><span style="color:#f1fa8c">&#39;</span><span style="color:#ff79c6">.</span>join(name<span style="color:#ff79c6">.</span>numpy()<span style="color:#ff79c6">.</span>decode(<span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#34;</span><span style="color:#f1fa8c">utf-8</span><span style="color:#f1fa8c">&#34;</span>)<span style="color:#ff79c6">.</span>split(<span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#39;</span><span style="color:#f1fa8c">_</span><span style="color:#f1fa8c">&#39;</span>)[:<span style="color:#ff79c6">-</span><span style="color:#bd93f9">1</span>])
+
+<span style="color:#ff79c6">def</span> <span style="color:#50fa7b">plotImages</span>(batch):
+    img, label <span style="color:#ff79c6">=</span> batch
+    
+    plt<span style="color:#ff79c6">.</span>figure(figsize<span style="color:#ff79c6">=</span>(<span style="color:#bd93f9">20</span>,<span style="color:#bd93f9">20</span>))
+    
+    <span style="color:#ff79c6">for</span> n <span style="color:#ff79c6">in</span> <span style="color:#8be9fd;font-style:italic">range</span>(<span style="color:#bd93f9">30</span>):
+        
+        plt<span style="color:#ff79c6">.</span>subplot(<span style="color:#bd93f9">6</span>,<span style="color:#bd93f9">5</span>,n<span style="color:#ff79c6">+</span><span style="color:#bd93f9">1</span>)
+        plt<span style="color:#ff79c6">.</span>imshow(img[n])
+        plt<span style="color:#ff79c6">.</span>title(feat_dict[label[n]<span style="color:#ff79c6">.</span>numpy()])
+        plt<span style="color:#ff79c6">.</span>axis(<span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#39;</span><span style="color:#f1fa8c">off</span><span style="color:#f1fa8c">&#39;</span>)
+        
+    plt<span style="color:#ff79c6">.</span>tight_layout()
+    plt<span style="color:#ff79c6">.</span>show()
+
+sample_train_batch <span style="color:#ff79c6">=</span> <span style="color:#8be9fd;font-style:italic">next</span>(<span style="color:#8be9fd;font-style:italic">iter</span>(train))
+plotImages(sample_train_batch) 
+
+</code></pre></div><p><img src="output_12_0.png" alt="png"></p>
+<h2 id="6-prepare-model">6) Prepare model:</h2>
+<p>Here we actually prepare our model.</p>
+<p>First we fetch the feature vector from tensorflow hub. There are many to choose from but here we grab a mobilnet_v2_140_224. It is extracted from a mobilenetV2 model trained on 224x224 ImageNet images with a depth multiplier of 1.4. The magntitude of the depth multiplier corresponds to the number of features in the convolutional layers with 1.4 being the highest available. We set the input shape to include size of our images and the three rgb channels. We also don't want to change any of the weights in our input layer during training so we set it to not be trainable.</p>
+<p>Note that the feature vector is extracted from a model trained on the ILSVRC2012 dataset which is a subset of 1000 classes from ImageNet. Of the 37 pets included in The Oxford-IIIT Pet Dataset dataset 23 of them are in the ILSVRC2012 dataset. That is 21 of the 25 dog breeds and 2 of the 12 cat breeds are in the training set for the feature vector albiet under different labels. This means we will be particularly interested in how this model adapts to the new classes included in the Oxford-IIIT Pet dataset but not the ILSVRC2012 dataset. Here's the list of such classes (remember cats start with a capital letter and dogs do not):</p>
+<p>Sphynx,
+British Shorthair,
+Maine Coon,
+Abyssinian,
+Bengal,
+Egyptian Mau,
+Russian Blue,
+Ragdoll,
+Birman,
+Bombay,
+havanese,
+leonberger,
+american bulldog,
+shiba inu</p>
+<p>We also include a dropout layer to reduce overfitting and add our pediction layer to the top.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">OUTPUT_CHANNELS <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">3</span>
+IMG_SHAPE <span style="color:#ff79c6">=</span> (<span style="color:#ff79c6">*</span>IMG_SIZE, OUTPUT_CHANNELS)
+NUM_CLASSES <span style="color:#ff79c6">=</span> info<span style="color:#ff79c6">.</span>features[<span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#39;</span><span style="color:#f1fa8c">label</span><span style="color:#f1fa8c">&#39;</span>]<span style="color:#ff79c6">.</span>num_classes
+
+feature_extractor_url <span style="color:#ff79c6">=</span> <span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#34;</span><span style="color:#f1fa8c">https://tfhub.dev/google/imagenet/mobilenet_v2_140_224/feature_vector/4</span><span style="color:#f1fa8c">&#34;</span>
+base_model <span style="color:#ff79c6">=</span> hub<span style="color:#ff79c6">.</span>KerasLayer(feature_extractor_url, trainable<span style="color:#ff79c6">=</span>False, input_shape<span style="color:#ff79c6">=</span>IMG_SHAPE)
+
+model <span style="color:#ff79c6">=</span> tf<span style="color:#ff79c6">.</span>keras<span style="color:#ff79c6">.</span>Sequential([
+    base_model,
+    keras<span style="color:#ff79c6">.</span>layers<span style="color:#ff79c6">.</span>Dropout(<span style="color:#bd93f9">0.25</span>),
+    keras<span style="color:#ff79c6">.</span>layers<span style="color:#ff79c6">.</span>Dense(NUM_CLASSES, activation<span style="color:#ff79c6">=</span><span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#39;</span><span style="color:#f1fa8c">softmax</span><span style="color:#f1fa8c">&#39;</span>)
+])
+
+model<span style="color:#ff79c6">.</span>summary()
+</code></pre></div><pre><code>Model: &quot;sequential&quot;
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+keras_layer (KerasLayer)     (None, 1792)              4363712   
+_________________________________________________________________
+dropout (Dropout)            (None, 1792)              0         
+_________________________________________________________________
+dense (Dense)                (None, 37)                66341     
+=================================================================
+Total params: 4,430,053
+Trainable params: 66,341
+Non-trainable params: 4,363,712
+_________________________________________________________________
+</code></pre>
+<h2 id="7-prepare-training">7) Prepare training:</h2>
+<p>We use the Adam optimizer and set it's learning rate to 0.0005 which is half it's default value. Our labels are integers and categorical, so rather than one-hot encode them we can simply use the sparse categorical cross entropy loss. We will use accuracy as our metric to understand how well our models are performing.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">LEARNING_RATE <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0.001</span><span style="color:#ff79c6">*</span><span style="color:#bd93f9">0.5</span>
+
+model<span style="color:#ff79c6">.</span>compile(optimizer<span style="color:#ff79c6">=</span>tf<span style="color:#ff79c6">.</span>keras<span style="color:#ff79c6">.</span>optimizers<span style="color:#ff79c6">.</span>Adam(learning_rate<span style="color:#ff79c6">=</span>LEARNING_RATE),
+              loss<span style="color:#ff79c6">=</span><span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#39;</span><span style="color:#f1fa8c">sparse_categorical_crossentropy</span><span style="color:#f1fa8c">&#39;</span>,
+              metrics<span style="color:#ff79c6">=</span>[<span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#39;</span><span style="color:#f1fa8c">accuracy</span><span style="color:#f1fa8c">&#39;</span>])
+</code></pre></div><h2 id="8-train-model">8) Train model:</h2>
+<p>We train for 30 epochs amd since we set our training input pipeline to repeat we are required to explicitly state the number of steps per epoch. We also set the number of validation steps in such a way that we have 5 subsplits we average the validation over.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">EPOCHS <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">30</span>
+
+TRAIN_LENGTH <span style="color:#ff79c6">=</span> info<span style="color:#ff79c6">.</span>splits[<span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#39;</span><span style="color:#f1fa8c">train</span><span style="color:#f1fa8c">&#39;</span>]<span style="color:#ff79c6">.</span>num_examples
+STEPS_PER_EPOCH <span style="color:#ff79c6">=</span> TRAIN_LENGTH <span style="color:#ff79c6">/</span><span style="color:#ff79c6">/</span> BATCH_SIZE
+
+VAL_SUBSPLITS <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">5</span>
+VALIDATION_STEPS <span style="color:#ff79c6">=</span> info<span style="color:#ff79c6">.</span>splits[<span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#39;</span><span style="color:#f1fa8c">test</span><span style="color:#f1fa8c">&#39;</span>]<span style="color:#ff79c6">.</span>num_examples<span style="color:#ff79c6">/</span><span style="color:#ff79c6">/</span>BATCH_SIZE<span style="color:#ff79c6">/</span><span style="color:#ff79c6">/</span>VAL_SUBSPLITS
+
+
+history <span style="color:#ff79c6">=</span> model<span style="color:#ff79c6">.</span>fit(train, 
+                    validation_data<span style="color:#ff79c6">=</span>test,
+                    epochs<span style="color:#ff79c6">=</span>EPOCHS,
+                    steps_per_epoch<span style="color:#ff79c6">=</span>STEPS_PER_EPOCH,
+                    validation_steps<span style="color:#ff79c6">=</span>VALIDATION_STEPS
+                    )
+</code></pre></div><pre><code>Train for 115 steps, validate for 22 steps
+Epoch 1/30
+115/115 [==============================] - 11s 95ms/step - loss: 1.6393 - accuracy: 0.6046 - val_loss: 0.6802 - val_accuracy: 0.8494
+Epoch 2/30
+115/115 [==============================] - 6s 53ms/step - loss: 0.4478 - accuracy: 0.8924 - val_loss: 0.4426 - val_accuracy: 0.8892
+Epoch 3/30
+115/115 [==============================] - 6s 53ms/step - loss: 0.2859 - accuracy: 0.9318 - val_loss: 0.3773 - val_accuracy: 0.8991
+Epoch 4/30
+115/115 [==============================] - 6s 54ms/step - loss: 0.2167 - accuracy: 0.9462 - val_loss: 0.3480 - val_accuracy: 0.8935
+Epoch 5/30
+115/115 [==============================] - 6s 53ms/step - loss: 0.1736 - accuracy: 0.9579 - val_loss: 0.3222 - val_accuracy: 0.9162
+Epoch 6/30
+115/115 [==============================] - 6s 53ms/step - loss: 0.1372 - accuracy: 0.9739 - val_loss: 0.3103 - val_accuracy: 0.9134
+Epoch 7/30
+115/115 [==============================] - 6s 53ms/step - loss: 0.1155 - accuracy: 0.9772 - val_loss: 0.3014 - val_accuracy: 0.9148
+Epoch 8/30
+115/115 [==============================] - 6s 54ms/step - loss: 0.1034 - accuracy: 0.9804 - val_loss: 0.2868 - val_accuracy: 0.9105
+Epoch 9/30
+115/115 [==============================] - 6s 53ms/step - loss: 0.0822 - accuracy: 0.9883 - val_loss: 0.2857 - val_accuracy: 0.9091
+Epoch 10/30
+115/115 [==============================] - 6s 52ms/step - loss: 0.0729 - accuracy: 0.9899 - val_loss: 0.2919 - val_accuracy: 0.9148
+Epoch 11/30
+115/115 [==============================] - 6s 52ms/step - loss: 0.0645 - accuracy: 0.9924 - val_loss: 0.2807 - val_accuracy: 0.9148
+Epoch 12/30
+115/115 [==============================] - 6s 51ms/step - loss: 0.0572 - accuracy: 0.9935 - val_loss: 0.2781 - val_accuracy: 0.9190
+Epoch 13/30
+115/115 [==============================] - 6s 52ms/step - loss: 0.0501 - accuracy: 0.9951 - val_loss: 0.2684 - val_accuracy: 0.9205
+Epoch 14/30
+115/115 [==============================] - 6s 53ms/step - loss: 0.0448 - accuracy: 0.9962 - val_loss: 0.2768 - val_accuracy: 0.9190
+Epoch 15/30
+115/115 [==============================] - 6s 52ms/step - loss: 0.0402 - accuracy: 0.9973 - val_loss: 0.2728 - val_accuracy: 0.9205
+Epoch 16/30
+115/115 [==============================] - 6s 50ms/step - loss: 0.0380 - accuracy: 0.9981 - val_loss: 0.2779 - val_accuracy: 0.9148
+Epoch 17/30
+115/115 [==============================] - 6s 52ms/step - loss: 0.0352 - accuracy: 0.9976 - val_loss: 0.2880 - val_accuracy: 0.9119
+Epoch 18/30
+115/115 [==============================] - 6s 53ms/step - loss: 0.0310 - accuracy: 0.9978 - val_loss: 0.2842 - val_accuracy: 0.9176
+Epoch 19/30
+115/115 [==============================] - 6s 52ms/step - loss: 0.0296 - accuracy: 0.9992 - val_loss: 0.2888 - val_accuracy: 0.9176
+Epoch 20/30
+115/115 [==============================] - 6s 52ms/step - loss: 0.0258 - accuracy: 0.9984 - val_loss: 0.2847 - val_accuracy: 0.9134
+Epoch 21/30
+115/115 [==============================] - 6s 49ms/step - loss: 0.0238 - accuracy: 0.9997 - val_loss: 0.2812 - val_accuracy: 0.9247
+Epoch 22/30
+115/115 [==============================] - 6s 50ms/step - loss: 0.0233 - accuracy: 0.9995 - val_loss: 0.2874 - val_accuracy: 0.9176
+Epoch 23/30
+115/115 [==============================] - 6s 50ms/step - loss: 0.0204 - accuracy: 0.9989 - val_loss: 0.2882 - val_accuracy: 0.9148
+Epoch 24/30
+115/115 [==============================] - 6s 52ms/step - loss: 0.0195 - accuracy: 0.9986 - val_loss: 0.2863 - val_accuracy: 0.9190
+Epoch 25/30
+115/115 [==============================] - 6s 50ms/step - loss: 0.0173 - accuracy: 1.0000 - val_loss: 0.2783 - val_accuracy: 0.9219
+Epoch 26/30
+115/115 [==============================] - 6s 50ms/step - loss: 0.0156 - accuracy: 0.9997 - val_loss: 0.2891 - val_accuracy: 0.9190
+Epoch 27/30
+115/115 [==============================] - 6s 51ms/step - loss: 0.0153 - accuracy: 0.9997 - val_loss: 0.2846 - val_accuracy: 0.9190
+Epoch 28/30
+115/115 [==============================] - 6s 51ms/step - loss: 0.0159 - accuracy: 1.0000 - val_loss: 0.2835 - val_accuracy: 0.9148
+Epoch 29/30
+115/115 [==============================] - 6s 50ms/step - loss: 0.0137 - accuracy: 0.9997 - val_loss: 0.2856 - val_accuracy: 0.9205
+Epoch 30/30
+115/115 [==============================] - 6s 51ms/step - loss: 0.0123 - accuracy: 0.9997 - val_loss: 0.2947 - val_accuracy: 0.9162
+</code></pre>
+<h2 id="9-plot-learning-curves">9) Plot learning curves:</h2>
+<p>When we plot the accuracy and loss curves for both our training and test sets we can see the model converges very quickly.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">acc  <span style="color:#ff79c6">=</span> history<span style="color:#ff79c6">.</span>history[<span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#39;</span><span style="color:#f1fa8c">accuracy</span><span style="color:#f1fa8c">&#39;</span>]
+val_acc <span style="color:#ff79c6">=</span> history<span style="color:#ff79c6">.</span>history[<span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#39;</span><span style="color:#f1fa8c">val_accuracy</span><span style="color:#f1fa8c">&#39;</span>]
+
+loss <span style="color:#ff79c6">=</span> history<span style="color:#ff79c6">.</span>history[<span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#39;</span><span style="color:#f1fa8c">loss</span><span style="color:#f1fa8c">&#39;</span>]
+val_loss <span style="color:#ff79c6">=</span> history<span style="color:#ff79c6">.</span>history[<span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#39;</span><span style="color:#f1fa8c">val_loss</span><span style="color:#f1fa8c">&#39;</span>]
+
+
+plt<span style="color:#ff79c6">.</span>figure(figsize<span style="color:#ff79c6">=</span>(<span style="color:#bd93f9">8</span>, <span style="color:#bd93f9">8</span>))
+plt<span style="color:#ff79c6">.</span>subplot(<span style="color:#bd93f9">2</span>, <span style="color:#bd93f9">1</span>, <span style="color:#bd93f9">1</span>)
+plt<span style="color:#ff79c6">.</span>plot(acc, label<span style="color:#ff79c6">=</span><span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#39;</span><span style="color:#f1fa8c">Training Accuracy</span><span style="color:#f1fa8c">&#39;</span>)
+plt<span style="color:#ff79c6">.</span>plot(val_acc, label<span style="color:#ff79c6">=</span><span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#39;</span><span style="color:#f1fa8c">Validation Accuracy</span><span style="color:#f1fa8c">&#39;</span>)
+plt<span style="color:#ff79c6">.</span>ylim([<span style="color:#bd93f9">0.6</span>, <span style="color:#bd93f9">1.01</span>])
+plt<span style="color:#ff79c6">.</span>plot([EPOCHS<span style="color:#ff79c6">-</span><span style="color:#bd93f9">1</span>,EPOCHS<span style="color:#ff79c6">-</span><span style="color:#bd93f9">1</span>])
+plt<span style="color:#ff79c6">.</span>legend(loc<span style="color:#ff79c6">=</span><span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#39;</span><span style="color:#f1fa8c">lower right</span><span style="color:#f1fa8c">&#39;</span>)
+plt<span style="color:#ff79c6">.</span>title(<span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#39;</span><span style="color:#f1fa8c">Training and Validation Accuracy</span><span style="color:#f1fa8c">&#39;</span>)
+
+plt<span style="color:#ff79c6">.</span>subplot(<span style="color:#bd93f9">2</span>, <span style="color:#bd93f9">1</span>, <span style="color:#bd93f9">2</span>)
+plt<span style="color:#ff79c6">.</span>plot(loss, label<span style="color:#ff79c6">=</span><span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#39;</span><span style="color:#f1fa8c">Training Loss</span><span style="color:#f1fa8c">&#39;</span>)
+plt<span style="color:#ff79c6">.</span>plot(val_loss, label<span style="color:#ff79c6">=</span><span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#39;</span><span style="color:#f1fa8c">Validation Loss</span><span style="color:#f1fa8c">&#39;</span>)
+plt<span style="color:#ff79c6">.</span>ylim([<span style="color:#ff79c6">-</span><span style="color:#bd93f9">0.01</span>, <span style="color:#bd93f9">1.5</span>])
+plt<span style="color:#ff79c6">.</span>plot([EPOCHS<span style="color:#ff79c6">-</span><span style="color:#bd93f9">1</span>,EPOCHS<span style="color:#ff79c6">-</span><span style="color:#bd93f9">1</span>])
+plt<span style="color:#ff79c6">.</span>legend(loc<span style="color:#ff79c6">=</span><span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#39;</span><span style="color:#f1fa8c">upper right</span><span style="color:#f1fa8c">&#39;</span>)
+plt<span style="color:#ff79c6">.</span>title(<span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#39;</span><span style="color:#f1fa8c">Training and Validation Loss</span><span style="color:#f1fa8c">&#39;</span>)
+plt<span style="color:#ff79c6">.</span>xlabel(<span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#39;</span><span style="color:#f1fa8c">epoch</span><span style="color:#f1fa8c">&#39;</span>)
+plt<span style="color:#ff79c6">.</span>show()
+
+</code></pre></div><p><img src="output_20_0.png" alt="png"></p>
+<h2 id="10-evaluation-of-predictions">10) Evaluation of predictions:</h2>
+<p>Here we evaluate our predictions. In particular we will observe how well our model adapts to the new classes not included in the training of the feature vector and how well it predicts dogs vs cats.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#ff79c6">def</span> <span style="color:#50fa7b">plotPredictedImages</span>(batch, pred, title):
+    img, label <span style="color:#ff79c6">=</span> batch
+    
+    plt<span style="color:#ff79c6">.</span>figure(figsize<span style="color:#ff79c6">=</span>(<span style="color:#bd93f9">10</span>,<span style="color:#bd93f9">10</span>))
+    plt<span style="color:#ff79c6">.</span>suptitle(title, fontsize<span style="color:#ff79c6">=</span><span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#39;</span><span style="color:#f1fa8c">xx-large</span><span style="color:#f1fa8c">&#39;</span>, y<span style="color:#ff79c6">=</span><span style="color:#bd93f9">1.05</span>)
+    plt<span style="color:#ff79c6">.</span>subplots_adjust(hspace<span style="color:#ff79c6">=</span><span style="color:#bd93f9">0.5</span>)
+    
+    <span style="color:#ff79c6">for</span> n <span style="color:#ff79c6">in</span> <span style="color:#8be9fd;font-style:italic">range</span>(<span style="color:#bd93f9">12</span>):
+        
+        plt<span style="color:#ff79c6">.</span>subplot(<span style="color:#bd93f9">3</span>,<span style="color:#bd93f9">4</span>,n<span style="color:#ff79c6">+</span><span style="color:#bd93f9">1</span>)
+        plt<span style="color:#ff79c6">.</span>imshow(img[n])
+        p <span style="color:#ff79c6">=</span> pred[n]
+        l <span style="color:#ff79c6">=</span> label[n]<span style="color:#ff79c6">.</span>numpy()
+
+        <span style="color:#ff79c6">if</span> pred[n] <span style="color:#ff79c6">==</span> label[n]:
+            plt<span style="color:#ff79c6">.</span>title(feat_dict[pred[n]], color<span style="color:#ff79c6">=</span><span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#34;</span><span style="color:#f1fa8c">green</span><span style="color:#f1fa8c">&#34;</span>)
+        <span style="color:#ff79c6">else</span>:
+            plt<span style="color:#ff79c6">.</span>title(feat_dict[p] <span style="color:#ff79c6">+</span> <span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#34;</span><span style="color:#f1fa8c">\n</span><span style="color:#f1fa8c">&#34;</span> <span style="color:#ff79c6">+</span> <span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#34;</span><span style="color:#f1fa8c"> (</span><span style="color:#f1fa8c">&#34;</span> <span style="color:#ff79c6">+</span> feat_dict[l] <span style="color:#ff79c6">+</span> <span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#34;</span><span style="color:#f1fa8c">)</span><span style="color:#f1fa8c">&#34;</span>, color<span style="color:#ff79c6">=</span><span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#34;</span><span style="color:#f1fa8c">red</span><span style="color:#f1fa8c">&#34;</span>)
+        
+        plt<span style="color:#ff79c6">.</span>axis(<span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#39;</span><span style="color:#f1fa8c">off</span><span style="color:#f1fa8c">&#39;</span>)    
+
+    plt<span style="color:#ff79c6">.</span>tight_layout()
+    plt<span style="color:#ff79c6">.</span>show()
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">all_accuracy <span style="color:#ff79c6">=</span> model<span style="color:#ff79c6">.</span>evaluate(test, verbose <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0</span>)[<span style="color:#bd93f9">1</span>]
+title <span style="color:#ff79c6">=</span> <span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#39;</span><span style="color:#f1fa8c">All classes</span><span style="color:#f1fa8c">\n</span><span style="color:#f1fa8c">Accuracy: {0:.2f}</span><span style="color:#f1fa8c">%</span><span style="color:#f1fa8c">&#39;</span><span style="color:#ff79c6">.</span>format(all_accuracy<span style="color:#ff79c6">*</span><span style="color:#bd93f9">100</span>)
+
+sample_test_batch <span style="color:#ff79c6">=</span> <span style="color:#8be9fd;font-style:italic">next</span>(<span style="color:#8be9fd;font-style:italic">iter</span>(test))
+predictions <span style="color:#ff79c6">=</span> model<span style="color:#ff79c6">.</span>predict_classes(sample_test_batch)
+plotPredictedImages(sample_test_batch, predictions, title) 
+</code></pre></div><p><img src="output_23_0.png" alt="png"></p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">NEW_CLASSES_STR <span style="color:#ff79c6">=</span> [
+    <span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#34;</span><span style="color:#f1fa8c">Sphynx</span><span style="color:#f1fa8c">&#34;</span>,
+    <span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#34;</span><span style="color:#f1fa8c">British Shorthair</span><span style="color:#f1fa8c">&#34;</span>,
+    <span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#34;</span><span style="color:#f1fa8c">Maine Coon</span><span style="color:#f1fa8c">&#34;</span>,
+    <span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#34;</span><span style="color:#f1fa8c">Abyssinian</span><span style="color:#f1fa8c">&#34;</span>,
+    <span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#34;</span><span style="color:#f1fa8c">Bengal</span><span style="color:#f1fa8c">&#34;</span>,
+    <span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#34;</span><span style="color:#f1fa8c">Egyptian Mau</span><span style="color:#f1fa8c">&#34;</span>,
+    <span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#34;</span><span style="color:#f1fa8c">Russian Blue</span><span style="color:#f1fa8c">&#34;</span>,
+    <span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#34;</span><span style="color:#f1fa8c">Ragdoll</span><span style="color:#f1fa8c">&#34;</span>,
+    <span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#34;</span><span style="color:#f1fa8c">Birman</span><span style="color:#f1fa8c">&#34;</span>,
+    <span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#34;</span><span style="color:#f1fa8c">Bombay</span><span style="color:#f1fa8c">&#34;</span>,
+    <span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#34;</span><span style="color:#f1fa8c">havanese</span><span style="color:#f1fa8c">&#34;</span>,
+    <span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#34;</span><span style="color:#f1fa8c">leonberger</span><span style="color:#f1fa8c">&#34;</span>,
+    <span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#34;</span><span style="color:#f1fa8c">american bulldog</span><span style="color:#f1fa8c">&#34;</span>,
+    <span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#34;</span><span style="color:#f1fa8c">shiba inu</span><span style="color:#f1fa8c">&#34;</span>
+]
+
+inv_feat_dict <span style="color:#ff79c6">=</span> {v: k <span style="color:#ff79c6">for</span> k, v <span style="color:#ff79c6">in</span> feat_dict<span style="color:#ff79c6">.</span>items()}
+
+NEW_CLASSES <span style="color:#ff79c6">=</span> tf<span style="color:#ff79c6">.</span>constant(
+    [inv_feat_dict[i] <span style="color:#ff79c6">for</span> i <span style="color:#ff79c6">in</span> NEW_CLASSES_STR], 
+    dtype<span style="color:#ff79c6">=</span>tf<span style="color:#ff79c6">.</span>int64)
+
+test_new <span style="color:#ff79c6">=</span> test<span style="color:#ff79c6">.</span>unbatch()<span style="color:#ff79c6">.</span>filter(
+    <span style="color:#ff79c6">lambda</span> image, label: tf<span style="color:#ff79c6">.</span>reduce_any(tf<span style="color:#ff79c6">.</span>equal(label, NEW_CLASSES))
+)<span style="color:#ff79c6">.</span>shuffle(SHUFFLE_BUFFER_SIZE)<span style="color:#ff79c6">.</span>batch(BATCH_SIZE)
+
+test_old <span style="color:#ff79c6">=</span> test<span style="color:#ff79c6">.</span>unbatch()<span style="color:#ff79c6">.</span>filter(
+    <span style="color:#ff79c6">lambda</span> image, label: tf<span style="color:#ff79c6">.</span>reduce_all(tf<span style="color:#ff79c6">.</span>not_equal(label, NEW_CLASSES))
+)<span style="color:#ff79c6">.</span>shuffle(SHUFFLE_BUFFER_SIZE)<span style="color:#ff79c6">.</span>batch(BATCH_SIZE)
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">CATS_STR <span style="color:#ff79c6">=</span> <span style="color:#8be9fd;font-style:italic">list</span>(<span style="color:#8be9fd;font-style:italic">filter</span>(<span style="color:#ff79c6">lambda</span> x: x[<span style="color:#bd93f9">0</span>]<span style="color:#ff79c6">.</span>isupper() , <span style="color:#8be9fd;font-style:italic">list</span>(inv_feat_dict<span style="color:#ff79c6">.</span>keys())))
+
+CATS <span style="color:#ff79c6">=</span> tf<span style="color:#ff79c6">.</span>constant(
+    [inv_feat_dict[i] <span style="color:#ff79c6">for</span> i <span style="color:#ff79c6">in</span> CATS_STR], 
+    dtype<span style="color:#ff79c6">=</span>tf<span style="color:#ff79c6">.</span>int64)
+
+test_cats <span style="color:#ff79c6">=</span> test<span style="color:#ff79c6">.</span>unbatch()<span style="color:#ff79c6">.</span>filter(
+    <span style="color:#ff79c6">lambda</span> image, label: tf<span style="color:#ff79c6">.</span>reduce_any(tf<span style="color:#ff79c6">.</span>equal(label, CATS))
+)<span style="color:#ff79c6">.</span>shuffle(SHUFFLE_BUFFER_SIZE)<span style="color:#ff79c6">.</span>batch(BATCH_SIZE)
+test_dogs <span style="color:#ff79c6">=</span> test<span style="color:#ff79c6">.</span>unbatch()<span style="color:#ff79c6">.</span>filter(
+    <span style="color:#ff79c6">lambda</span> image, label: tf<span style="color:#ff79c6">.</span>reduce_all(tf<span style="color:#ff79c6">.</span>not_equal(label, CATS))
+)<span style="color:#ff79c6">.</span>shuffle(SHUFFLE_BUFFER_SIZE)<span style="color:#ff79c6">.</span>batch(BATCH_SIZE)
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">new_accuracy <span style="color:#ff79c6">=</span> model<span style="color:#ff79c6">.</span>evaluate(test_new, verbose <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0</span>)[<span style="color:#bd93f9">1</span>]
+title <span style="color:#ff79c6">=</span> <span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#39;</span><span style="color:#f1fa8c">New classes only</span><span style="color:#f1fa8c">\n</span><span style="color:#f1fa8c">Accuracy: {0:.2f}</span><span style="color:#f1fa8c">%</span><span style="color:#f1fa8c">&#39;</span><span style="color:#ff79c6">.</span>format(new_accuracy<span style="color:#ff79c6">*</span><span style="color:#bd93f9">100</span>)
+
+sample_test_new_batch <span style="color:#ff79c6">=</span> <span style="color:#8be9fd;font-style:italic">next</span>(<span style="color:#8be9fd;font-style:italic">iter</span>(test_new))
+predictions_new <span style="color:#ff79c6">=</span> model<span style="color:#ff79c6">.</span>predict_classes(sample_test_new_batch)
+plotPredictedImages(sample_test_new_batch, predictions_new, title) 
+</code></pre></div><p><img src="output_26_0.png" alt="png"></p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">old_accuracy <span style="color:#ff79c6">=</span> model<span style="color:#ff79c6">.</span>evaluate(test_old, verbose <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0</span>)[<span style="color:#bd93f9">1</span>]
+title <span style="color:#ff79c6">=</span> <span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#39;</span><span style="color:#f1fa8c">Old classes only</span><span style="color:#f1fa8c">\n</span><span style="color:#f1fa8c">Accuracy: {0:.2f}</span><span style="color:#f1fa8c">%</span><span style="color:#f1fa8c">&#39;</span><span style="color:#ff79c6">.</span>format(old_accuracy<span style="color:#ff79c6">*</span><span style="color:#bd93f9">100</span>)
+
+sample_test_old_batch <span style="color:#ff79c6">=</span> <span style="color:#8be9fd;font-style:italic">next</span>(<span style="color:#8be9fd;font-style:italic">iter</span>(test_old))
+predictions_old <span style="color:#ff79c6">=</span> model<span style="color:#ff79c6">.</span>predict_classes(sample_test_old_batch)
+plotPredictedImages(sample_test_old_batch, predictions_old, title) 
+</code></pre></div><p><img src="output_27_0.png" alt="png"></p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">cats_accuracy <span style="color:#ff79c6">=</span> model<span style="color:#ff79c6">.</span>evaluate(test_cats, verbose <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0</span>)[<span style="color:#bd93f9">1</span>]
+title <span style="color:#ff79c6">=</span> <span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#39;</span><span style="color:#f1fa8c">Cats only</span><span style="color:#f1fa8c">\n</span><span style="color:#f1fa8c">Accuracy: {0:.2f}</span><span style="color:#f1fa8c">%</span><span style="color:#f1fa8c">&#39;</span><span style="color:#ff79c6">.</span>format(cats_accuracy<span style="color:#ff79c6">*</span><span style="color:#bd93f9">100</span>)
+
+sample_test_cats_batch <span style="color:#ff79c6">=</span> <span style="color:#8be9fd;font-style:italic">next</span>(<span style="color:#8be9fd;font-style:italic">iter</span>(test_cats))
+predictions_cats <span style="color:#ff79c6">=</span> model<span style="color:#ff79c6">.</span>predict_classes(sample_test_cats_batch)
+plotPredictedImages(sample_test_cats_batch, predictions_cats, title) 
+</code></pre></div><p><img src="output_28_0.png" alt="png"></p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">dogs_accuracy <span style="color:#ff79c6">=</span> model<span style="color:#ff79c6">.</span>evaluate(test_dogs, verbose <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0</span>)[<span style="color:#bd93f9">1</span>]
+title <span style="color:#ff79c6">=</span> <span style="color:#f1fa8c"></span><span style="color:#f1fa8c">&#39;</span><span style="color:#f1fa8c">Dogs only</span><span style="color:#f1fa8c">\n</span><span style="color:#f1fa8c">Accuracy: {0:.2f}</span><span style="color:#f1fa8c">%</span><span style="color:#f1fa8c">&#39;</span><span style="color:#ff79c6">.</span>format(dogs_accuracy<span style="color:#ff79c6">*</span><span style="color:#bd93f9">100</span>)
+
+sample_test_dogs_batch <span style="color:#ff79c6">=</span> <span style="color:#8be9fd;font-style:italic">next</span>(<span style="color:#8be9fd;font-style:italic">iter</span>(test_dogs))
+predictions_dogs <span style="color:#ff79c6">=</span> model<span style="color:#ff79c6">.</span>predict_classes(sample_test_dogs_batch)
+plotPredictedImages(sample_test_dogs_batch, predictions_dogs, title)
+</code></pre></div><p><img src="output_29_0.png" alt="png"></p>
+<p>We can see that accuracy is much higher on breeds already familiar to the feature vector. No suprises here. What might be suprising is how well the model performed on the 14 breeds it had not seen
+before. The final evaluation was 88.5% accuracy on such breeds. Not only that, but it converged quite quickly and did not require any advanced architecture to achieve these results.</p>
+
+      </div>
+
+      <footer>
+        
+
+
+        <div id="disqus_thread"></div>
+<script type="application/javascript">
+    var disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "yourdiscussshortname" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+        
+        
+      </footer>
+    </article>
+
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script type="text/javascript" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/startup.js" id="MathJax-script"></script>
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [
+          ['$', '$'], ['\\(', '\\)']
+        ],
+        processEscapes: true,
+        processEnvironments: true
+      },
+      options: {
+        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+      }
+    };
+  </script>
+  </section>
+
+      </div>
+
+      <footer class="footer">
+  <section class="container">
+    
+      <p>A professional website for Philip C. Stevens.</p>
+    
+     © 2019
+    
+       · 
+      Powered by <a href="https://gohugo.io/">Hugo</a> & <a href="https://github.com/luizdepra/hugo-coder/">Coder</a>.
+    
+    
+  </section>
+</footer>
+
+    </main>
+
+    
+
+  </body>
+
+</html>

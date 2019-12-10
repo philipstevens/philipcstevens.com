@@ -7,7 +7,7 @@ defaultcontentlanguage = "en"
 paginate = 20
 canonifyurls = true
 
-pygmentsstyle = "bw"
+#pygmentsstyle = "bw"
 pygmentscodefences = true
 pygmentscodefencesguesssyntax = true
 
@@ -62,6 +62,17 @@ disqusShortname = "yourdiscussshortname"
     name = "Projects"
     weight = 3
     url = "/projects/"
+
+[markup]
+  [markup.highlight]
+    codeFences = true
+    hl_Lines = ""
+    lineNoStart = 1
+    lineNos = false
+    lineNumbersInTable = true
+    noClasses = true
+    style = "dracula"
+    tabWidth = 4
 
 [deployment]
 [[deployment.targets]]
