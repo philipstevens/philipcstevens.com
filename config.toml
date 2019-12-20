@@ -10,8 +10,6 @@ canonifyurls = true
 pygmentscodefences = true
 pygmentscodefencesguesssyntax = true
 
-disqusShortname = "yourdiscussshortname"
-
 [params]
     author = "Philip C. Stevens"
     info = "Data Scientist and Machine Learning Engineer"
@@ -21,8 +19,6 @@ disqusShortname = "yourdiscussshortname"
 
     favicon_32 = "/img/favicon-32x32.png"
     favicon_16 = "/img/favicon-16x16.png"
-
-    # footercontent = "A professional website for Philip C. Stevens."
 
     hidecredits = false
     hidecopyright = false
