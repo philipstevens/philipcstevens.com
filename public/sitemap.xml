@@ -18,17 +18,22 @@
   </url>
   
   <url>
-    <loc>http://www.philipcstevens.com/projects/</loc>
-    <lastmod>2019-09-27T11:12:09+07:00</lastmod>
-  </url>
-  
-  <url>
     <loc>http://www.philipcstevens.com/contact/</loc>
     <lastmod>2019-09-27T11:11:51+07:00</lastmod>
   </url>
   
   <url>
     <loc>http://www.philipcstevens.com/about/</loc>
+    <lastmod>2019-09-27T11:11:15+07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://www.philipcstevens.com/projects/about/</loc>
+    <lastmod>2019-09-27T11:11:15+07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://www.philipcstevens.com/projects/</loc>
     <lastmod>2019-09-27T11:11:15+07:00</lastmod>
   </url>
   
