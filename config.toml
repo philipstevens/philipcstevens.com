@@ -15,14 +15,14 @@ disqusShortname = "yourdiscussshortname"
 [params]
     author = "Philip C. Stevens"
     info = "Data Scientist and Machine Learning Engineer"
-    description = "Phil Stevens' personal website"
+    description = "A professional website for Philip C. Stevens"
     keywords = "blog,developer,personal,data scientist,machine learning"
     avatarurl = "images/headshot.jpg"
 
     favicon_32 = "/img/favicon-32x32.png"
     favicon_16 = "/img/favicon-16x16.png"
 
-    footercontent = "A professional website for Philip C. Stevens."
+    # footercontent = "A professional website for Philip C. Stevens."
 
     hidecredits = false
     hidecopyright = false
