@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Projects on Philip C. Stevens</title>
+    <link>http://www.philipcstevens.com/projects/</link>
+    <description>Recent content in Projects on Philip C. Stevens</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <lastBuildDate>Fri, 27 Sep 2019 11:11:15 +0700</lastBuildDate>
+    
+	<atom:link href="http://www.philipcstevens.com/projects/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Pet Predictor</title>
+      <link>http://www.philipcstevens.com/projects/about/</link>
+      <pubDate>Fri, 27 Sep 2019 11:11:15 +0700</pubDate>
+      
+      <guid>http://www.philipcstevens.com/projects/about/</guid>
+      <description>form { margin: auto; width: 100%; } .result { margin: auto; width: 100%; border: 1px solid #ccc; }   Select image to upload:  Predicted breed: Prediction
+ document.forms[&#39;form&#39;].addEventListener(&#39;submit&#39;, (event) = { event.preventDefault(); document.getElementById(&#39;pred&#39;).innerHTML = type(event[&#39;image&#39;]) fetch(event.target.action, { method: &#39;POST&#39;, body: new URLSearchParams(new FormData(event.target)) // event.target is the form }).then((resp) = { return resp.json(); // or resp.text() or whatever the server sends }).then((body) = { body.getElementById(&#39;pred&#39;).innerHTML = &#39;Worked!&#39;; }).</description>
+    </item>
+    
+  </channel>
+</rss>
