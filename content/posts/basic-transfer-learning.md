@@ -5,32 +5,27 @@ date = "2019-12-10T10:47:44+07:00"
 
 # Basic Transfer Learning
 
-Here I will demonstrate how to do basic transfer learning with tensorflow and keras. The bottom layer of our neural network will use a feature vector extracted from a much more complex convolutional neural network.  
+Here I will demonstrate how to do basic transfer learning with tensorflow and keras. Transfer learning is when you reuse the model weights trained for one task as the starting point for training a model on a different but related task. The value of this is to very quickly develop a model that converges fast in training and performs well in use. 
+
+In this demonstration the bottom layer of our neural network will use a feature vector extracted from a much more complex convolutional neural network trained on a very broad set of images. We will transfer this to the smaller more specific domain of images of certain cat and dog breeds.  
+
 
 ## 1) Imports: 
 
-We use tensorflow (tf) with keras to build and train our models. 
-
-We use tensorflow_hub (hub) which connects to a library of reusable machine learning model components called modules which can be viewed here: https://tfhub.dev/. From here we will extract a pretrained feature layer which will transfer to our model. 
-
-Similarly, we use tensorflow_datasets (tfds) which connects to a collection of datasets ready to use with tensorflow: https://www.tensorflow.org/datasets/catalog/overview. 
-
-We will use matplotlib.pyplot (plt) to plot our learning curves. 
-
-
+We will make use of the following modules:
 
 ```python
 import tensorflow as tf
 import tensorflow.keras as keras
-import tensorflow_hub as hub
-import tensorflow_datasets as tfds
-import matplotlib.pyplot as plt
+import tensorflow_hub as hub # connects to a library of reusable machine learning model components called modules: https://tfhub.dev/
+import tensorflow_datasets as tfds # connects to a collection of datasets ready to use with tensorflow: https://www.tensorflow.org/datasets/catalog/overview. 
+import matplotlib.pyplot as plt # to plot our learning curves
 ```
 
 
 ## 2) Setup and validate the GPUs:
 
-Here we prepare the GPUs for use and confirm they are avaialable to tensorflow. Note memory growth must be set before GPUs have been initialized and that memory growth needs to be the same across GPUs. 
+Here we prepare the GPUs for use and confirm they are available to Tensorflow. Note memory growth must be set before GPUs have been initialized and that memory growth needs to be the same across GPUs. The output lets us know this step worked and how many GPUs are available. 
 
 
 ```python
@@ -58,7 +53,7 @@ The Oxford-IIIT Pet Dataset is an image dataset of 37 breeds of cats and dogs wi
 
 tfds.load is a convenience method that's the simplest way to build and load a tf.data.Dataset when it is registered in the Tensorflow datasets collection. When with_info=True a tuple is returned that contains both the dataset and a tfds.core.DatasetInfo object which contains useful metadata on the dataset. 
 
-Each dataset comes in it's own format which you may have to explore. In this case our dataset is actually two tf.data.Dataset's specified in a dicitonary as the train and test splits. Each split contains the images, labels, file names and segmentation masks. 
+Each dataset comes in it's own format which you may have to explore. In this case our dataset is actually two tf.data.Dataset's specified in a dictionary as the train and test splits. Each split contains the images, labels, file names and segmentation masks. 
 
 Note when we load we could set as_supervised to true and the dataset will have a 2-tuple structure of (image, label) and remove all the other data we aren't using. However in this case the info object does not include a feature dictionary from label to human-readable string so we must infer it ourselves from the dataset directly where a file_name is associated with each label.
 
@@ -156,9 +151,9 @@ plotImages(sample_train_batch)
 
 Here we actually prepare our model.
 
-First we fetch the feature vector from tensorflow hub. There are many to choose from but here we grab a mobilnet_v2_140_224. It is extracted from a mobilenetV2 model trained on 224x224 ImageNet images with a depth multiplier of 1.4. The magntitude of the depth multiplier corresponds to the number of features in the convolutional layers with 1.4 being the highest available. We set the input shape to include size of our images and the three rgb channels. We also don't want to change any of the weights in our input layer during training so we set it to not be trainable. 
+First we fetch the feature vector from tensorflow hub. There are many to choose from but here we grab a mobilnet_v2_140_224. It is extracted from a mobilenetV2 model trained on 224x224 ImageNet images with a depth multiplier of 1.4. The magnitude of the depth multiplier corresponds to the number of features in the convolutional layers with 1.4 being the highest available. We set the input shape to include size of our images and the three rgb channels. We also don't want to change any of the weights in our input layer during training so we set it to not be trainable. 
 
-Note that the feature vector is extracted from a model trained on the ILSVRC2012 dataset which is a subset of 1000 classes from ImageNet. Of the 37 pets included in The Oxford-IIIT Pet Dataset dataset 23 of them are in the ILSVRC2012 dataset. That is 21 of the 25 dog breeds and 2 of the 12 cat breeds are in the training set for the feature vector albiet under different labels. This means we will be particularly interested in how this model adapts to the new classes included in the Oxford-IIIT Pet dataset but not the ILSVRC2012 dataset. Here's the list of such classes (remember cats start with a capital letter and dogs do not):
+Note that the feature vector is extracted from a model trained on the ILSVRC2012 dataset which is a subset of 1000 classes from ImageNet. Of the 37 pets included in The Oxford-IIIT Pet Dataset dataset 23 of them are in the ILSVRC2012 dataset. That is 21 of the 25 dog breeds and 2 of the 12 cat breeds are in the training set for the feature vector albeit under different labels. This means we will be particularly interested in how this model adapts to the new classes included in the Oxford-IIIT Pet dataset but not the ILSVRC2012 dataset. Here's the list of such classes (remember cats start with a capital letter and dogs do not):
 
 Sphynx,
 British Shorthair,
@@ -175,7 +170,9 @@ leonberger,
 american bulldog,
 shiba inu
 
-We also include a dropout layer to reduce overfitting and add our pediction layer to the top.
+We also include a dropout layer to reduce overfitting and add our prediction layer to the top.
+
+The output describes our final model architecture. 
 
 
 ```python
@@ -226,7 +223,7 @@ model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=LEARNING_RATE),
 
 ## 8) Train model:
 
-We train for 30 epochs amd since we set our training input pipeline to repeat we are required to explicitly state the number of steps per epoch. We also set the number of validation steps in such a way that we have 5 subsplits we average the validation over. 
+We train for 30 epochs and since we set our training input pipeline to repeat we are required to explicitly state the number of steps per epoch. We also set the number of validation steps in such a way that we have 5 subsplits of our validation data. 
 
 
 ```python
@@ -312,7 +309,7 @@ history = model.fit(train,
 
 ## 9) Plot learning curves:
 
-When we plot the accuracy and loss curves for both our training and test sets we can see the model converges very quickly. 
+When we plot the accuracy and loss curves for both our training and test sets we can see the model converges very quickly. This is one of the very reasons we use transfer learning.
 
 
 ```python
@@ -350,7 +347,10 @@ plt.show()
 
 ## 10) Evaluation of predictions:
 
-Here we evaluate our predictions. In particular we will observe how well our model adapts to the new classes not included in the training of the feature vector and how well it predicts dogs vs cats. 
+Here we evaluate our predictions. In particular we will observe how well our model adapts to the new classes not included in the training of the feature vector and how well it predicts dogs vs cats. We measure the accuracy on each subset of the images. W also plot a sample of the predicted images where a false prediction has a red label with the true label in parentheses. 
+
+We can see that accuracy is much higher on breeds already familiar to the feature vector. No surprises here. What might be surprising is how well the model performed on the 14 breeds it had not seen 
+before. The final evaluation was 88.5% accuracy on such breeds. 
 
 
 ```python
@@ -377,24 +377,14 @@ def plotPredictedImages(batch, pred, title):
 
     plt.tight_layout()
     plt.show()
-```
 
-
-```python
 all_accuracy = model.evaluate(test, verbose = 0)[1]
 title = 'All classes\nAccuracy: {0:.2f}%'.format(all_accuracy*100)
 
 sample_test_batch = next(iter(test))
 predictions = model.predict_classes(sample_test_batch)
 plotPredictedImages(sample_test_batch, predictions, title) 
-```
 
-
-![png](output_23_0.png)
-
-
-
-```python
 NEW_CLASSES_STR = [
     "Sphynx",
     "British Shorthair",
@@ -425,10 +415,7 @@ test_new = test.unbatch().filter(
 test_old = test.unbatch().filter(
     lambda image, label: tf.reduce_all(tf.not_equal(label, NEW_CLASSES))
 ).shuffle(SHUFFLE_BUFFER_SIZE).batch(BATCH_SIZE)
-```
 
-
-```python
 CATS_STR = list(filter(lambda x: x[0].isupper() , list(inv_feat_dict.keys())))
 
 CATS = tf.constant(
@@ -441,52 +428,28 @@ test_cats = test.unbatch().filter(
 test_dogs = test.unbatch().filter(
     lambda image, label: tf.reduce_all(tf.not_equal(label, CATS))
 ).shuffle(SHUFFLE_BUFFER_SIZE).batch(BATCH_SIZE)
-```
 
-
-```python
 new_accuracy = model.evaluate(test_new, verbose = 0)[1]
 title = 'New classes only\nAccuracy: {0:.2f}%'.format(new_accuracy*100)
 
 sample_test_new_batch = next(iter(test_new))
 predictions_new = model.predict_classes(sample_test_new_batch)
 plotPredictedImages(sample_test_new_batch, predictions_new, title) 
-```
 
-
-![png](output_26_0.png)
-
-
-
-```python
 old_accuracy = model.evaluate(test_old, verbose = 0)[1]
 title = 'Old classes only\nAccuracy: {0:.2f}%'.format(old_accuracy*100)
 
 sample_test_old_batch = next(iter(test_old))
 predictions_old = model.predict_classes(sample_test_old_batch)
 plotPredictedImages(sample_test_old_batch, predictions_old, title) 
-```
 
-
-![png](output_27_0.png)
-
-
-
-```python
 cats_accuracy = model.evaluate(test_cats, verbose = 0)[1]
 title = 'Cats only\nAccuracy: {0:.2f}%'.format(cats_accuracy*100)
 
 sample_test_cats_batch = next(iter(test_cats))
 predictions_cats = model.predict_classes(sample_test_cats_batch)
 plotPredictedImages(sample_test_cats_batch, predictions_cats, title) 
-```
 
-
-![png](output_28_0.png)
-
-
-
-```python
 dogs_accuracy = model.evaluate(test_dogs, verbose = 0)[1]
 title = 'Dogs only\nAccuracy: {0:.2f}%'.format(dogs_accuracy*100)
 
@@ -495,9 +458,21 @@ predictions_dogs = model.predict_classes(sample_test_dogs_batch)
 plotPredictedImages(sample_test_dogs_batch, predictions_dogs, title)
 ```
 
+![png](output_23_0.png)
+
+
+![png](output_26_0.png)
+
+
+![png](output_27_0.png)
+
+
+![png](output_28_0.png)
+
 
 ![png](output_29_0.png)
 
 
-We can see that accuracy is much higher on breeds already familiar to the feature vector. No suprises here. What might be suprising is how well the model performed on the 14 breeds it had not seen 
-before. The final evaluation was 88.5% accuracy on such breeds. Not only that, but it converged quite quickly and did not require any advanced architecture to achieve these results.
+## 11) Conclusion:
+
+In a short period of time with a comparatively simple architecture we were able to develop a model on a new dataset that converged quickly and got results of 88.5% on classes it had not seen before and 91.11% overall. I hope this demonstrates the value of transfer learning. 
